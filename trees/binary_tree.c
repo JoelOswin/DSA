@@ -18,7 +18,7 @@ typedef struct queueNode{
     struct queueNode* llink;
 } queueNode;
 
-queueNode* create_head()
+queueNode* create_queue()
 {
     queueNode* head = (queueNode*) malloc(sizeof(queueNode));
     if (!head) return NULL;
@@ -28,32 +28,27 @@ queueNode* create_head()
     return head;
 }
 
-void addq(queueNode** head, queueNode** current, TreeNode* tree_node)
+void addq(queueNode** head, TreeNode* tree_node)
 {
     queueNode* node = (queueNode*) malloc(sizeof(queueNode));
     if (!node) return;
     node->node = tree_node;
-    node->llink = (*current);
-    (*current)->rlink = node;
+    queueNode* rear = (*head)->llink;
+    rear->rlink = node;
+    node->llink = rear;
     node->rlink = (*head);
     (*head)->llink = node;
 }
 
 TreeNode* deleteq(queueNode** head)
 {
-    queueNode* front = (*head)->rlink;
-    queueNode* rear = (*head)->llink;
-    if (!front){
-        TreeNode* node = front->node;
-        front->node = NULL;
-        front->llink = rear;
-        rear->rlink = front;
-        queueNode* temp = (*head);
-        (*head) = front;
-        free(temp);
-        return node;
-    }
-    return NULL;
+    queueNode* node = (*head)->rlink;
+    if (node == (*head)) return NULL;
+    (*head)->rlink = node->rlink;
+    node->rlink->llink = (*head);
+    TreeNode* return_node = node->node;
+    free(node);
+    return return_node;
 }
 
 stackNode* create_stack()
@@ -118,13 +113,27 @@ void iter_inorder(TreeNode* root)
         printf("%c", node->value);
         if (node->right_child)
             printf("%c", node->right_child->value);
-        free(node);
     }
+    free(stack);
 }
 
 void iter_levelorder(TreeNode* root)
 {
-    
+    queueNode* head = create_queue();
+    addq(&head, root);
+    while(1){
+        root = deleteq(&head);
+        if (root){
+            printf("%c", root->value);
+            if (root->left_child)
+                addq(&head, root->left_child);
+            if (root->right_child)
+                addq(&head, root->right_child);
+        }else{
+            free(head);
+            break;
+        }
+    }
 }
 
 void main()
@@ -144,4 +153,6 @@ void main()
     add_child(&current, 'A', 0);
 
     iter_inorder(root);
+    printf("\n");
+    iter_levelorder(root);
 }
