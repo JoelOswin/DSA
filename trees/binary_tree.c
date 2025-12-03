@@ -1,10 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 typedef struct TreeNode{
     char value;
     struct TreeNode* left_child;
     struct TreeNode* right_child;
+    bool rightThread;
+    bool leftThread;
 } TreeNode;
 
 typedef struct stackNode{
@@ -71,8 +74,11 @@ void push(stackNode** stack, TreeNode* node)
 
 TreeNode* pop(stackNode** top)
 {
+    if (!(*top)) return NULL;
     TreeNode* return_val = (*top)->node;
+    stackNode* temp = (*top);
     (*top) = (*top)->link;
+    free(temp);
     return return_val;
 }
 
@@ -83,6 +89,8 @@ TreeNode* create_root(char value)
     root->value = value;
     root->left_child = NULL;
     root->right_child = NULL;
+    root->leftThread = false;
+    root->rightThread = false;
     return root;
 }
 
@@ -94,6 +102,8 @@ void add_child(TreeNode** current, char value, int dir)
     child->value = value;
     child->left_child = NULL;
     child->right_child = NULL;
+    child->leftThread = false;
+    child->rightThread = false;
     if (dir)
         (*current)->right_child = child;
     else
@@ -103,18 +113,33 @@ void add_child(TreeNode** current, char value, int dir)
 void iter_inorder(TreeNode* root)
 {
     stackNode* stack = create_stack();
-    while(root){
-        push(&stack, root);
-        root = root->left_child;
-    }
     while(1){
-        TreeNode* node = pop(&stack);
-        if (!node) break;
-        printf("%c", node->value);
-        if (node->right_child)
-            printf("%c", node->right_child->value);
+        if (root){
+            push(&stack, root);
+            root = root->left_child;
+        }else {
+            root = pop(&stack);
+            if (!root) break;
+            printf("%c", root->value);
+            root = root->right_child;
+        }
     }
-    free(stack);
+}
+
+void iter_preorder(TreeNode* root)
+{
+    stackNode* stack = create_stack();
+    while(1){
+        if (root){
+            printf("%c", root->value);
+            push(&stack, root);
+            root = root->left_child;
+        }else {
+            root = pop(&stack);
+            if (!root) break;
+            root = root->right_child;
+        }
+    }
 }
 
 void iter_levelorder(TreeNode* root)
@@ -155,4 +180,42 @@ void main()
     iter_inorder(root);
     printf("\n");
     iter_levelorder(root);
+    printf("\n");
+    iter_preorder(root);
+    printf("\n");
+
+    // Another Tree Order: Inorder
+    TreeNode* root1 = create_root('8');
+    stackNode* stack = create_stack();
+    TreeNode* current1 = root1;
+    add_child(&current1, '4', 0);
+    push(&stack, current1->left_child);
+    add_child(&current1, 'C', 1);
+    push(&stack, current1->right_child);
+    current1 = pop(&stack);
+    add_child(&current1, 'A', 0);
+    push(&stack, current1->left_child);
+    add_child(&current1, 'E', 1);
+    push(&stack, current1->right_child);
+    current1 = pop(&stack);
+    add_child(&current1, 'F', 1);
+    add_child(&current1, 'D', 0);
+    current1 = pop(&stack);
+    add_child(&current1, '9', 0);
+    add_child(&current1, 'B', 1);
+    current1 = pop(&stack);
+    add_child(&current1, '2', 0);
+    push(&stack, current1->left_child);
+    add_child(&current1, '6', 1);
+    push(&stack, current1->right_child);
+    current1 = pop(&stack);
+    add_child(&current1, '5', 0);
+    add_child(&current1, '7', 1);
+    current1 = pop(&stack);
+    add_child(&current1, '1', 0);
+    add_child(&current1, '3', 1);
+    
+    iter_inorder(root1);
+    printf("\n");
+    iter_levelorder(root1);
 }
